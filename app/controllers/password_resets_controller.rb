@@ -3,7 +3,16 @@ class PasswordResetsController < ApplicationController
   skip_before_action :authenticated
 
   def reset_password
-    user = Marshal.load(Base64.decode64(params[:user])) unless params[:user].nil?
+    user = nil
+    unless params[:user].nil?
+      begin
+        verifier = Rails.application.message_verifier(:password_reset)
+        user_id = verifier.verify(params[:user])
+        user = User.find_by(id: user_id)
+      rescue ActiveSupport::MessageVerifier::InvalidSignature
+        user = nil
+      end
+    end
 
     if user && params[:password] && params[:confirm_password] && params[:password] == params[:confirm_password]
       user.password = params[:password]
