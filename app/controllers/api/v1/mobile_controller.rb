@@ -5,16 +5,24 @@ class Api::V1::MobileController < ApplicationController
 
   respond_to :json
 
+  ALLOWED_MODELS = {
+    'users' => User,
+    'posts' => Post,
+    'comments' => Comment
+  }.freeze
+
   def show
     if params[:class]
-      model = params[:class].classify.constantize
+      model = ALLOWED_MODELS[params[:class]]
+      return head :bad_request unless model
       respond_with model.find(params[:id]).to_json
     end
   end
 
   def index
     if params[:class]
-      model = params[:class].classify.constantize
+      model = ALLOWED_MODELS[params[:class]]
+      return head :bad_request unless model
       respond_with model.all.to_json
     else
       respond_with nil.to_json
